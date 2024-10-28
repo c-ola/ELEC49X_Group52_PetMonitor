@@ -1,4 +1,4 @@
-#include "accelerometer.h"
+#include "util/accelerometer.h"
 
 void displaySensorDetails(Adafruit_ADXL345_Unified* accel) {
     sensor_t sensor;

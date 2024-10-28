@@ -2,8 +2,7 @@
 #include <Adafruit_ADXL345_U.h>
 #include <ctime>
 #include "Arduino.h"
-#include "accelerometer.h"
-
+#include "util/accelerometer.h"
 
 /* Assign a unique ID to this sensor at the same time */
 Adafruit_ADXL345_Unified accel = Adafruit_ADXL345_Unified(12345);
