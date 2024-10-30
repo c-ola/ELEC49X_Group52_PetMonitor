@@ -20,7 +20,6 @@ void setup() {
     }
     LoRa.setSyncWord(0xF1);
     Serial.println("LoRa Initializing Successful!");
-
 }
 
 void loop() {

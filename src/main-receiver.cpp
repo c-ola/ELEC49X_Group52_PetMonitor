@@ -18,7 +18,7 @@ void setup() {
     delay(500);
   }
   LoRa.setSyncWord(0xF1);
-  Serial.println("LoRa Initializing Successful!");
+  Serial.println("LoRa Initializing Successful (Receiver)!");
 
 }
 

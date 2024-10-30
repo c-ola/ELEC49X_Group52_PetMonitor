@@ -1,8 +1,48 @@
 #include "util/accelerometer.h"
+#include "Adafruit_ADXL345_U.h"
 
-void displaySensorDetails(Adafruit_ADXL345_Unified* accel) {
+Accelerometer::Accelerometer() : Adafruit_ADXL345_Unified(12345) {
+
+}
+
+
+Accelerometer::Accelerometer(uint32_t SD) : Adafruit_ADXL345_Unified(SD) {
+;
+}
+
+void Accelerometer::setup() {
+
+    if(!this->begin()) {
+        /* There was a problem detecting the ADXL345 ... check your connections */
+        Serial.println("Ooops, no ADXL345 detected ... Check your wiring!");
+        while(1);
+    }
+
+    //this->displaySensorDetails();
+    //this->displayDataRate();
+    //this->displayRange();
+    
+    this->setRange(ADXL345_RANGE_16_G);
+    // this->setRange(ADXL345_RANGE_8_G);
+    // this->setRange(ADXL345_RANGE_4_G);
+    // this->setRange(ADXL345_RANGE_2_G);
+
+    
+    this->writeRegister(ADXL345_REG_INT_ENABLE, 0b00011010);
+    //this->writeRegister(ADXL345_REG_INT_ENABLE, ADXL345_INT_EN_INACT);
+    this->writeRegister(ADXL345_REG_INT_MAP, 0b00010000);
+    
+    this->writeRegister(ADXL345_REG_THRESH_ACT, 5);
+    this->writeRegister(ADXL345_REG_THRESH_INACT, 20);
+    this->writeRegister(ADXL345_REG_TIME_INACT, 0x02);
+    
+    this->writeRegister(ADXL345_REG_ACT_INACT_CTL, 0b01100110);
+
+}
+
+void Accelerometer::displaySensorDetails() {
     sensor_t sensor;
-    accel->getSensor(&sensor);
+    this->getSensor(&sensor);
     Serial.println("------------------------------------");
     Serial.print  ("Sensor:       "); Serial.println(sensor.name);
     Serial.print  ("Driver Ver:   "); Serial.println(sensor.version);
@@ -16,10 +56,10 @@ void displaySensorDetails(Adafruit_ADXL345_Unified* accel) {
 }
 
 
-void displayDataRate(Adafruit_ADXL345_Unified* accel) {
+void Accelerometer::displayDataRate() {
     Serial.print("Data Rate:    "); 
 
-    switch(accel->getDataRate())
+    switch(this->getDataRate())
     {
         case ADXL345_DATARATE_3200_HZ:
             Serial.print  ("3200 "); 
@@ -76,10 +116,10 @@ void displayDataRate(Adafruit_ADXL345_Unified* accel) {
     Serial.println(" Hz");  
 }
 
-void displayRange(Adafruit_ADXL345_Unified* accel) {
+void Accelerometer::displayRange() {
     Serial.print  ("Range:         +/- "); 
 
-    switch(accel->getRange())
+    switch(this->getRange())
     {
         case ADXL345_RANGE_16_G:
             Serial.print  ("16 "); 
