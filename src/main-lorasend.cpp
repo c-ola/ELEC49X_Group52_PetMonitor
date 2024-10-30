@@ -3,9 +3,9 @@
 #include <SPI.h>
 #include <cstdint>
 
-#define NSS 16
-#define RST 5
-#define DI0 2
+#define NSS 5
+#define RST 15
+#define DI0 4
 #define SCK 18
 
 String LoRaData;
