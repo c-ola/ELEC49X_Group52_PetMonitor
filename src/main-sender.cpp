@@ -2,6 +2,8 @@
 #include <Adafruit_ADXL345_U.h>
 #include <ctime>
 #include "Arduino.h"
+#include "HardwareSerial.h"
+#include "TinyGPS++.h"
 #include "util/accelerometer.h"
 #include "util/util.h"
 #include "math.h"
@@ -15,6 +17,7 @@ float t_last;
 float vx = 0.0f;
 float vy = 0.0f;
 int state = INACTIVE;
+TinyGPSPlus gps;
 
 #define NSS 5
 #define RST 15
@@ -24,8 +27,13 @@ int state = INACTIVE;
 #define LED_PIN 2
 #define ACT_INTERRUPT_PIN 34
 
+#define GPS_BAUD 9600
+
 void setup() {
     Serial.begin(115200);
+    // RX2 => 16
+    // TX2 => 17
+    Serial2.begin(GPS_BAUD, SERIAL_8N1, RX2, TX2);
     
     Serial.println("Setting up Accelerometer");
     accel->setup();
@@ -86,6 +94,9 @@ void loop() {
         }
         
         /* Get GPS data */
+        Serial.print("Satellites: ");
+        Serial.println(gps.satellites.value());
+        Serial.print("Location lat, lng"); Serial.print(gps.location.lat()); Serial.print(gps.location.lng());
         
 
         /* Send GPS data */
@@ -99,6 +110,10 @@ void loop() {
             } else {
                 Serial.println("Failed to send packet");
             }
+        }
+
+        while (Serial2.available()) {
+            gps.encode(Serial2.read());
         }
 
     }
