@@ -1,5 +1,6 @@
 #include <Adafruit_Sensor.h>
 #include <Adafruit_ADXL345_U.h>
+#include <cstdint>
 #include <ctime>
 #include "Arduino.h"
 #include "HardwareSerial.h"
@@ -28,6 +29,12 @@ TinyGPSPlus gps;
 #define ACT_INTERRUPT_PIN 34
 
 #define GPS_BAUD 9600
+
+struct GPSPacket {
+    uint32_t numSats;
+    double lng;
+    double lat;
+};
 
 void setup() {
     Serial.begin(115200);
@@ -96,14 +103,17 @@ void loop() {
         /* Get GPS data */
         Serial.print("Satellites: ");
         Serial.println(gps.satellites.value());
-        Serial.print("Location lat, lng"); Serial.print(gps.location.lat()); Serial.print(gps.location.lng());
-        
+        Serial.print("Location lat, lng"); Serial.print(gps.location.lat()); Serial.print(","); Serial.println(gps.location.lng());
+
+        GPSPacket pkt = {
+            gps.satellites.value(),
+            gps.location.lat(),
+            gps.location.lng()
+        };
 
         /* Send GPS data */
         if (LoRa.beginPacket()) {
-            uint8_t buf[255] = "hello\0";
-
-            unsigned int written = LoRa.write(buf, 255);
+            unsigned int written = LoRa.write((uint8_t*)&pkt, sizeof(GPSPacket));
             Serial.print("Written: "); Serial.println(written);
             if (LoRa.endPacket(false)) {
                 Serial.println("Sent packet");
