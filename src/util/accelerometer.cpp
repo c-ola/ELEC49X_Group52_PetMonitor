@@ -34,7 +34,7 @@ void Accelerometer::setup() {
     
     this->writeRegister(ADXL345_REG_THRESH_ACT, 5);
     this->writeRegister(ADXL345_REG_THRESH_INACT, 20);
-    this->writeRegister(ADXL345_REG_TIME_INACT, 0x02);
+    this->writeRegister(ADXL345_REG_TIME_INACT, 10);
     
     this->writeRegister(ADXL345_REG_ACT_INACT_CTL, 0b01100110);
 
