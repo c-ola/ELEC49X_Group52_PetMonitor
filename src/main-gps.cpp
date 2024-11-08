@@ -75,7 +75,7 @@ void loop()
     printInt(gps.failedChecksum(), true, 9);
     Serial.println();
 
-    smartDelay(500);
+    smartDelay(1000);
 
     if (millis() > 5000 && gps.charsProcessed() < 10)
         Serial.println(F("No GPS data received: check wiring"));

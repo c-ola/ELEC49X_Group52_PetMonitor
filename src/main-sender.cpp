@@ -5,14 +5,15 @@
 #include "Arduino.h"
 #include "HardwareSerial.h"
 #include "TinyGPS++.h"
-#include "esp32-hal-touch.h"
 #include "esp_attr.h"
 #include "esp_sleep.h"
 #include "driver/rtc_io.h"
 #include "util/accelerometer.h"
-#include "util/util.h"
 #include "math.h"
 #include "LoRa.h"
+#include "MAX17043.h"
+#include "util/util.h"
+
 
 /* Assign a unique ID to this sensor at the same time */
 Accelerometer* accel = new Accelerometer(12345);
@@ -37,12 +38,6 @@ RTC_DATA_ATTR int boot_count = 0;
 
 #define DO_DEEP_SLEEP
 
-struct GPSPacket {
-    uint32_t numSats;
-    double lng;
-    double lat;
-};
-
 void setup() {
     Serial.begin(115200);
     if (boot_count != 0) {
@@ -64,6 +59,7 @@ void setup() {
     Serial2.begin(GPS_BAUD, SERIAL_8N1, RX2, TX2);
 
     Serial.println("Setting up Accelerometer");
+    Wire.begin(21, 22);
     accel->setup();
 
     Serial.println("Setup Pins");
@@ -83,6 +79,12 @@ void setup() {
     esp_sleep_enable_ext0_wakeup(ACT_INTERRUPT_PIN, 1);
     rtc_gpio_pullup_dis(ACT_INTERRUPT_PIN);
     rtc_gpio_pulldown_en(ACT_INTERRUPT_PIN);
+
+    // Fuel Gauge
+    Wire1.begin(32, 33);
+    FuelGauge.begin(&Wire1);
+    FuelGauge.quickstart();
+
 
     state = ACTIVE;
     t_now = micros();
@@ -130,7 +132,7 @@ void do_active() {
     Serial.println(gps.satellites.value());
     Serial.print("Location lat, lng"); Serial.print(gps.location.lat()); Serial.print(","); Serial.println(gps.location.lng());
 
-    GPSPacket pkt = {
+    Packet pkt = {
         gps.satellites.value(),
         gps.location.lat(),
         gps.location.lng()
@@ -138,7 +140,7 @@ void do_active() {
 
     /* Send GPS data */
     if (LoRa.beginPacket()) {
-        unsigned int written = LoRa.write((uint8_t*)&pkt, sizeof(GPSPacket));
+        unsigned int written = LoRa.write((uint8_t*)&pkt, sizeof(Packet));
         Serial.print("Written: "); Serial.println(written);
         if (LoRa.endPacket(false)) {
             Serial.println("Sent packet");
@@ -150,8 +152,20 @@ void do_active() {
     while (Serial2.available()) {
         gps.encode(Serial2.read());
     }
+
+    float percentage = FuelGauge.percent();
+    float voltage = FuelGauge.voltage();
+    
+    Serial.print("Battery percentage: ");
+    Serial.print(percentage);
+    Serial.println("%");
+
+    Serial.print("Battery voltage: ");
+    Serial.print(voltage);
+    Serial.println("mV");
     delay(500);
 }
+
 
 void loop() {
 #ifndef DO_DEEP_SLEEP

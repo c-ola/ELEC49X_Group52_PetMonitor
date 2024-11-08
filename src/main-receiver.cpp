@@ -1,6 +1,7 @@
 #include <Wire.h>
 #include <LoRa.h>
 #include <SPI.h>
+#include "util/util.h"
 
 #define NSS 4
 #define RST 5
@@ -8,12 +9,6 @@
 #define SCK 18
 
 String LoRaData;
-
-struct GPSPacket {
-    uint32_t numSats;
-    double lng;
-    double lat;
-};
 
 void setup() {
     Serial.begin(115200);
@@ -35,9 +30,9 @@ void loop() {
     if (packetSize) {
         Serial.println("Received packet: ");
         while (LoRa.available()) {
-            size_t bytes_read = LoRa.readBytes(buf, sizeof(GPSPacket));
+            size_t bytes_read = LoRa.readBytes(buf, sizeof(Packet));
         }
-        GPSPacket* data = (GPSPacket*)&buf;
+        Packet* data = (Packet*)&buf;
         
         Serial.println(data->numSats);
         Serial.println(data->lat);

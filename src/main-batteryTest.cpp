@@ -3,7 +3,7 @@
 
 void setup(){
     Serial.begin(115200);
-    Wire.begin(21, 22);
+    Wire.begin(32, 33);
     FuelGauge.begin();
     FuelGauge.quickstart();
 }
