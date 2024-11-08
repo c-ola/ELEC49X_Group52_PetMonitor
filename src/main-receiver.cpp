@@ -2,6 +2,7 @@
 #include <LoRa.h>
 #include <SPI.h>
 #include "util/util.h"
+#include "Arduino.h"
 #include <Adafruit_GFX.h>
 #include <Adafruit_SSD1306.h>
 
@@ -32,6 +33,10 @@ void setup() {
         Serial.println(F("SSD1306 allocation failed"));
         for(;;); // Don't proceed, loop forever
     }
+    
+    display.display();
+    delay(100);
+    display.clearDisplay();
 
     LoRa.setPins(NSS, RST, DI0);
 
@@ -49,6 +54,21 @@ void setup() {
 
 uint8_t buf[255];
 
+void testdrawrect(void) {
+  display.clearDisplay();
+
+  for(int16_t i=0; i<display.height()/2; i+=2) {
+    display.drawRect(i, i, display.width()-2*i, display.height()-2*i, SSD1306_WHITE);
+    display.display(); // Update screen with each newly-drawn rectangle
+    delay(1);
+  }
+
+  delay(2000);
+}
+
+
+float percentage = 0.0;
+
 void loop() {
     int packetSize = LoRa.parsePacket();
     if (packetSize) {
@@ -63,12 +83,15 @@ void loop() {
         Serial.println(data->lng);
         Serial.println(data->percentage);
 
-        int percentage = (int) data->percentage;
+        percentage = data->percentage;
         
-        display.clearDisplay();
-        display.setCursor(10,10);
-        display.print(percentage);
-        display.display();
-        delay(50);
     }
+    delay(250);
+    display.clearDisplay();
+    display.setTextSize(3);             // Normal 1:1 pixel scale
+    display.setCursor(10,10);             // Start at top-left corner
+
+    display.setTextColor(SSD1306_WHITE); // Draw 'inverse' text
+    display.println(percentage);;
+    display.display();
 }

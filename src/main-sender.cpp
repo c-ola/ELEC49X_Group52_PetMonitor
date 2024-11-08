@@ -127,6 +127,18 @@ void do_active() {
         Serial.print("vx: "); Serial.print(vx); Serial.print(", vy: "); Serial.print(vy); Serial.println();
     }
 
+    float percentage = FuelGauge.percent();
+    float voltage = FuelGauge.voltage();
+
+    Serial.print("Battery percentage: ");
+    Serial.print(percentage);
+    Serial.println("%");
+
+    Serial.print("Battery voltage: ");
+    Serial.print(voltage);
+    Serial.println("mV");
+
+
     /* Get GPS data */
     Serial.print("Satellites: ");
     Serial.println(gps.satellites.value());
@@ -135,7 +147,9 @@ void do_active() {
     Packet pkt = {
         gps.satellites.value(),
         gps.location.lat(),
-        gps.location.lng()
+        gps.location.lng(),
+        percentage,
+        voltage
     };
 
     /* Send GPS data */
@@ -153,16 +167,6 @@ void do_active() {
         gps.encode(Serial2.read());
     }
 
-    float percentage = FuelGauge.percent();
-    float voltage = FuelGauge.voltage();
-    
-    Serial.print("Battery percentage: ");
-    Serial.print(percentage);
-    Serial.println("%");
-
-    Serial.print("Battery voltage: ");
-    Serial.print(voltage);
-    Serial.println("mV");
     delay(500);
 }
 
