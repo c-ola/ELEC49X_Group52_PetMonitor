@@ -69,7 +69,20 @@ void testdrawrect(void) {
 
 float percentage = 0.0;
 
+float t_now;
+float t_last; 
+float accumulator;
+
 void loop() {
+    t_last = t_now;
+    t_now = millis();
+    accumulator += t_now - t_last;
+    bool tick = false;
+    if (accumulator >= 5000) {
+        tick = true;
+        accumulator = 0;
+    }
+
     int packetSize = LoRa.parsePacket();
     if (packetSize) {
         Serial.println("Received packet: ");
@@ -86,12 +99,14 @@ void loop() {
         percentage = data->percentage;
         
     }
-    delay(250);
-    display.clearDisplay();
-    display.setTextSize(3);             // Normal 1:1 pixel scale
-    display.setCursor(10,10);             // Start at top-left corner
 
-    display.setTextColor(SSD1306_WHITE); // Draw 'inverse' text
-    display.println(percentage);;
-    display.display();
+    if (tick) {
+        display.clearDisplay();
+        display.setTextSize(3);             // Normal 1:1 pixel scale
+        display.setCursor(10,10);             // Start at top-left corner
+
+        display.setTextColor(SSD1306_WHITE); // Draw 'inverse' text
+        display.println(percentage);;
+        display.display();
+    }
 }
