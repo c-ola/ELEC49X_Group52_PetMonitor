@@ -13,8 +13,9 @@ String LoRaData;
 void setup() {
     Serial.begin(115200);
     LoRa.setPins(NSS, RST, DI0);
+    Wire.begin(19, 23);
 
-    while (!LoRa.begin(433E6)) {
+    while (!LoRa.begin(915E6)) {
         Serial.println(".");
         delay(500);
     }
@@ -22,16 +23,21 @@ void setup() {
     Serial.println("LoRa Initializing Successful!");
 }
 
+int counter = 0;
 void loop() {
-    while(!LoRa.beginPacket());
-    Serial.println("Preparing packet");
-    uint8_t buffer[255] = "hello daniell\0"; 
-    unsigned int written = LoRa.write(buffer, 255);
-    Serial.print("Written: "); Serial.println(written);
-    if (LoRa.endPacket(false)) {
-        Serial.println("Sent packet");
-    } else {
-        Serial.println("Failed to send packet");
-    }
+  // wait until the radio is ready to send a packet
+  while (LoRa.beginPacket() == 0) {
+    Serial.print("waiting for radio ... ");
+    delay(100);
+  }
+  Serial.print("Sending packet non-blocking: ");
+  Serial.println(counter);
 
+  // send in async / non-blocking mode
+  LoRa.beginPacket();
+  LoRa.print("hello ");
+  LoRa.print(counter);
+  LoRa.endPacket(); // true = async / non-blocking mode
+
+  counter++;
 }

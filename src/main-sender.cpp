@@ -8,12 +8,56 @@
 #include "esp_attr.h"
 #include "esp_sleep.h"
 #include "driver/rtc_io.h"
+#include "hal/gpio_types.h"
 #include "util/accelerometer.h"
 #include "math.h"
 #include "LoRa.h"
 #include "MAX17043.h"
 #include "util/util.h"
 
+
+/*
+ * Pin outs
+ *
+ *
+ */
+
+/*
+ * LoRa
+ */
+#define NSS 5
+#define RST 15
+#define DI0 4
+#define SCK 18
+// LoRa-MOSI <=> 23
+// LoRa-MISO <=> 19
+
+/*
+ * ADXL 345
+ */
+// INT2
+#define ACT_INTERRUPT_PIN GPIO_NUM_34
+// SDA <=> 21
+// SCL <=> 22
+// Wire.begin(21, 22)
+
+/*
+ * GPS
+    TX <=> 16
+    RX <=> 17
+    GND <=> Transistor out
+    VCC <=> 3v3
+ */
+
+/*
+ * MAX17043
+ */
+// Wire.begin(32, 33)
+
+/*
+ * Transistor Power Switch
+ */
+#define ACTIVATE_POWER_PIN GPIO_NUM_25
 
 /* Assign a unique ID to this sensor at the same time */
 Accelerometer* accel = new Accelerometer(12345);
@@ -26,13 +70,6 @@ int state = INACTIVE;
 TinyGPSPlus gps;
 RTC_DATA_ATTR int boot_count = 0;
 
-#define NSS 5
-#define RST 15
-#define DI0 4
-#define SCK 18
-
-#define LED_PIN 2
-#define ACT_INTERRUPT_PIN GPIO_NUM_34
 
 #define GPS_BAUD 9600
 
@@ -63,13 +100,15 @@ void setup() {
     accel->setup();
 
     Serial.println("Setup Pins");
-    pinMode(LED_PIN, OUTPUT);
+    pinMode(2, OUTPUT);
+    pinMode(ACTIVATE_POWER_PIN, OUTPUT);
+    digitalWrite(ACTIVATE_POWER_PIN, HIGH);
     pinMode(ACT_INTERRUPT_PIN, INPUT);
 
     Serial.println("Setup LoRa");
 
     LoRa.setPins(NSS, RST, DI0);
-    while (!LoRa.begin(433E6)) {
+    while (!LoRa.begin(915E6)) {
         Serial.println(".");
         delay(500);
     }
@@ -80,10 +119,17 @@ void setup() {
     rtc_gpio_pullup_dis(ACT_INTERRUPT_PIN);
     rtc_gpio_pulldown_en(ACT_INTERRUPT_PIN);
 
+    delay(100);
+
     // Fuel Gauge
     Wire1.begin(32, 33);
     FuelGauge.begin(&Wire1);
-    FuelGauge.quickstart();
+    if (FuelGauge.isSleeping()) {
+        FuelGauge.wake();
+        FuelGauge.quickstart();
+    } else {
+        FuelGauge.reset();
+    }
 
 
     state = ACTIVE;
@@ -98,7 +144,7 @@ void check_active() {
     if (act_int && state == INACTIVE) {
         state = ACTIVE;
         Serial.println("Active");
-        digitalWrite(LED_PIN, HIGH);
+        digitalWrite(LED_BUILTIN, HIGH);
         vx = 0.0f;
         vy = 0.0f;
     } 
@@ -118,7 +164,7 @@ void do_active() {
     if (check_inactive()) {
         Serial.println("Inactive");
         state = INACTIVE;
-        digitalWrite(LED_PIN, LOW);
+        digitalWrite(2, LOW);
     } else {
         sensors_event_t event; 
         accel->getEvent(&event);
@@ -178,7 +224,7 @@ void loop() {
 
 
     if (state == ACTIVE) {
-        digitalWrite(LED_PIN, HIGH);
+        digitalWrite(2, HIGH);
         vx = 0.0f;
         vy = 0.0f;
         do_active();
@@ -186,6 +232,8 @@ void loop() {
     if (state == INACTIVE) {
         Serial.println("Entering Deep Sleep");
         Serial.flush();
+        digitalWrite(ACTIVATE_POWER_PIN, LOW);
+        FuelGauge.sleep();
         esp_deep_sleep_start();
     }
 }
