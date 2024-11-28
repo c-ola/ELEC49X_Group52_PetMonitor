@@ -1,4 +1,3 @@
-Warning: Width correction constrained.  The width correction value must be in the range of [0.000001 mm; 0.199999 mm] for the current design rules.
 Plotted to '/home/nikola/Documents/school/elec49x/code/kicad/lora_breakout/lora_breakout-F_Cu.gbr'.
 Plotted to '/home/nikola/Documents/school/elec49x/code/kicad/lora_breakout/lora_breakout-B_Cu.gbr'.
 Plotted to '/home/nikola/Documents/school/elec49x/code/kicad/lora_breakout/lora_breakout-F_Paste.gbr'.

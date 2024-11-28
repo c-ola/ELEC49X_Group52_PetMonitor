@@ -123,15 +123,23 @@ void setup() {
 
     // Fuel Gauge
     Wire1.begin(32, 33);
-    FuelGauge.begin(&Wire1);
-    if (FuelGauge.isSleeping()) {
-        FuelGauge.wake();
-        FuelGauge.quickstart();
-    } else {
+    if (FuelGauge.begin(&Wire1)) {
+        delay(100);
+        if (FuelGauge.isSleeping()) {
+            Serial.println("Waking MAX170543");
+            FuelGauge.wake();
+        } else {
+        }
         FuelGauge.reset();
+        delay(100);
+        FuelGauge.quickstart();
+        delay(100);
+    } else {
+        Serial.println("AHRADS");
+        while(1);
     }
 
-
+    delay(1000);
     state = ACTIVE;
     t_now = micros();
     Serial.println("Completed Setup");
@@ -223,17 +231,17 @@ void loop() {
 #endif
 
 
-    if (state == ACTIVE) {
+    if (state == ACTIVE || true) {
         digitalWrite(2, HIGH);
         vx = 0.0f;
         vy = 0.0f;
         do_active();
     }
-    if (state == INACTIVE) {
+    /*if (state == INACTIVE) {
         Serial.println("Entering Deep Sleep");
         Serial.flush();
         digitalWrite(ACTIVATE_POWER_PIN, LOW);
         FuelGauge.sleep();
         esp_deep_sleep_start();
-    }
+    }*/
 }

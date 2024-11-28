@@ -28,19 +28,19 @@ String LoRaData;
 void setup() {
     Serial.begin(115200);
 
-    if(!display.begin(SSD1306_SWITCHCAPVCC, SCREEN_ADDRESS)) {
+    /*if(!display.begin(SSD1306_SWITCHCAPVCC, SCREEN_ADDRESS)) {
         Serial.println("here");
         Serial.println(F("SSD1306 allocation failed"));
         for(;;); // Don't proceed, loop forever
-    }
+    }*/
     
-    display.display();
-    delay(100);
-    display.clearDisplay();
+    //display.display();
+    //delay(100);
+    //display.clearDisplay();
 
     LoRa.setPins(NSS, RST, DI0);
 
-    while (!LoRa.begin(433E6)) {
+    while (!LoRa.begin(915E6)) {
         Serial.println(".");
         delay(500);
     }
@@ -54,19 +54,6 @@ void setup() {
 
 uint8_t buf[255];
 
-void testdrawrect(void) {
-  display.clearDisplay();
-
-  for(int16_t i=0; i<display.height()/2; i+=2) {
-    display.drawRect(i, i, display.width()-2*i, display.height()-2*i, SSD1306_WHITE);
-    display.display(); // Update screen with each newly-drawn rectangle
-    delay(1);
-  }
-
-  delay(2000);
-}
-
-
 float percentage = 0.0;
 
 float t_now;
@@ -78,35 +65,37 @@ void loop() {
     t_now = millis();
     accumulator += t_now - t_last;
     bool tick = false;
-    if (accumulator >= 5000) {
+    if (accumulator >= 2000) {
         tick = true;
         accumulator = 0;
     }
-
     int packetSize = LoRa.parsePacket();
     if (packetSize) {
         Serial.println("Received packet: ");
+        Packet data = {};
         while (LoRa.available()) {
-            size_t bytes_read = LoRa.readBytes(buf, sizeof(Packet));
+            size_t bytes_read = LoRa.readBytes((char*)&data, sizeof(Packet));
+            Serial.print("Bytes Read: "); Serial.println(bytes_read);
         }
-        Packet* data = (Packet*)&buf;
         
-        Serial.println(data->numSats);
-        Serial.println(data->lat);
-        Serial.println(data->lng);
-        Serial.println(data->percentage);
+        Serial.print("Satellites: ");Serial.println(data.numSats);
+        Serial.print("Lattitude: ");Serial.println(data.lat);
+        Serial.print("Longitude: ");Serial.println(data.lng);
+        Serial.print("Battery %: ");Serial.println(data.percentage);
+        Serial.print("Voltage: "); Serial.println(data.voltage);
 
-        percentage = data->percentage;
+        percentage = data.percentage;
         
     }
 
     if (tick) {
-        display.clearDisplay();
+        Serial.println("Ticking");
+       /* display.clearDisplay();
         display.setTextSize(3);             // Normal 1:1 pixel scale
         display.setCursor(10,10);             // Start at top-left corner
 
         display.setTextColor(SSD1306_WHITE); // Draw 'inverse' text
         display.println(percentage);;
-        display.display();
+        display.display();*/
     }
 }
