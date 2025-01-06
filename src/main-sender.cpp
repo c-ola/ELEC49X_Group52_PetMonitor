@@ -231,17 +231,17 @@ void loop() {
 #endif
 
 
-    if (state == ACTIVE || true) {
+    if (state == ACTIVE) {
         digitalWrite(2, HIGH);
         vx = 0.0f;
         vy = 0.0f;
         do_active();
     }
-    /*if (state == INACTIVE) {
+    if (state == INACTIVE) {
         Serial.println("Entering Deep Sleep");
         Serial.flush();
         digitalWrite(ACTIVATE_POWER_PIN, LOW);
         FuelGauge.sleep();
         esp_deep_sleep_start();
-    }*/
+    }
 }
